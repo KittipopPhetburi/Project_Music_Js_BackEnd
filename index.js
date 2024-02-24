@@ -72,7 +72,7 @@ app.post('/music', (req,res) => {
 
 app.put('/music/:id', (req,res) => {
     const music = req.body;
-    db.run(`UPDATE music SET title = ?, singer = ? , genre = ? , release_date = ? ,WHERE id = ?`, music.title, music.singer,music.genre,music.release_date, function(err) {
+    db.run(`UPDATE music SET title = ?, singer = ? , genre = ? , release_date = ? WHERE id = ?`, music.title, music.singer,music.genre,music.release_date, req.params.id,function(err) {
         if (err) res.status(500).send(err);
         else res.send(music);
     });
