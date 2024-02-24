@@ -61,7 +61,7 @@ app.get('/music/:id', (req,res) => {
 
 app.post('/music', (req,res) => {
     const music = req.body;
-    db.run(`INSERT INTO music (title,author) VALUES (?,?)`, music.title, music.author, function(err) {
+    db.run(`INSERT INTO music (title,singer,genre,release_date) VALUES (?,?,?,?)`, music.title, music.singer,music.genre,music.release_date, function(err) {
         if (err) res.status(500).send(err);
         else {
             music.id = this.lastID;
@@ -72,7 +72,7 @@ app.post('/music', (req,res) => {
 
 app.put('/music/:id', (req,res) => {
     const music = req.body;
-    db.run(`UPDATE music SET title = ?, author = ? WHERE id = ?`, music.title, music.author, req.params.id, function(err) {
+    db.run(`UPDATE music SET title = ?, singer = ? , genre = ? , release_date = ? ,WHERE id = ?`, music.title, music.singer,music.genre,music.release_date, function(err) {
         if (err) res.status(500).send(err);
         else res.send(music);
     });
