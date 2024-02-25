@@ -42,7 +42,7 @@ db.run(`CREATE TABLE IF NOT EXISTS review (
     comment TEXT
 )`);
 
-app.get('/music', (req,res) => {
+/* app.get('/music', (req,res) => {
     db.all(`SELECT * FROM music`, (err,rows) => {
         if (err) res.status(500).send(err);
         else res.json(rows);
@@ -53,7 +53,7 @@ app.get('/music/:id', (req,res) => {
     db.get(`SELECT * FROM music WHERE id = ?`, req.params.id, (err,rows) => {
         if (err) res.status(500).send(err);
         else {
-            if (!rows) res.status(404).send('Book not found');
+            if (!rows) res.status(404).send('music not found');
             else res.json(rows);
         }
     });
@@ -80,6 +80,53 @@ app.put('/music/:id', (req,res) => {
 
 app.delete('/music/:id', (req,res) => {
     db.run(`DELETE FROM music WHERE id = ?`, req.params.id, function(err) {
+        if (err) res.status(500).send(err);
+        else res.send({});
+    });
+});
+
+
+ */
+
+
+app.get('/user', (req,res) => {
+    db.all(`SELECT * FROM user`, (err,rows) => {
+        if (err) res.status(500).send(err);
+        else res.json(rows);
+    });
+});
+
+app.get('/user/:user_id', (req,res) => {
+    db.get(`SELECT * FROM user WHERE user_id = ?`, req.params.user_id, (err,rows) => {
+        if (err) res.status(500).send(err);
+        else {
+            if (!rows) res.status(404).send('user not found');
+            else res.json(rows);
+        }
+    });
+});
+
+app.post('/user', (req,res) => {
+    const user = req.body;
+    db.run(`INSERT INTO user (user_id,username,password,name) VALUES (?,?,?,?)`, user.user_id, user.username,user.password,user.name, function(err) {
+        if (err) res.status(500).send(err);
+        else {
+            user.user_id = this.lastID;
+            res.send(user);
+        }
+    });
+});
+
+app.put('/user/:user_id', (req,res) => {
+    const user = req.body;
+    db.run(`UPDATE user SET username = ? , password = ? , name = ? WHERE user_id = ?`, user.username,user.password,user.name, req.params.user_id,function(err) {
+        if (err) res.status(500).send(err);
+        else res.send(user);
+    });
+});
+
+app.delete('/user/:user_id', (req,res) => {
+    db.run(`DELETE FROM user WHERE user_id = ?`, req.params.user_id, function(err) {
         if (err) res.status(500).send(err);
         else res.send({});
     });
