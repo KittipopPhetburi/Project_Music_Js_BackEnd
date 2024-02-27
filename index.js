@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const express = require('express');
 const sqlite3 = require('sqlite3');
 const app = express();
@@ -13,6 +11,7 @@ db.run(`CREATE TABLE IF NOT EXISTS music (
     title TEXT,
     singer TEXT,
     genre TEXT,
+    musicImg TEXT,
     release_date TEXT
 )`);
 
@@ -20,9 +19,9 @@ db.run(`CREATE TABLE IF NOT EXISTS user (
     user_id INTEGER PRIMARY KEY,
     username TEXT,
     password TEXT,
-    name TEXT,
+    email TEXT,
     age TEXT,
-    phone_number CHAR
+    role TEXT DEFAULT 'user'
 )`);
 
 db.run(`CREATE TABLE IF NOT EXISTS playlist (
@@ -42,10 +41,51 @@ db.run(`CREATE TABLE IF NOT EXISTS review (
     comment TEXT
 )`);
 
+// user db
+app.get('/user', (req,res) => {
+    db.all(`SELECT * FROM user`, (err,rows) => {
+        if (err) res.status(500).send(err);
+        else res.json(rows);
+    });
+});
 
+app.get('/user/:user_id', (req,res) => {
+    db.get(`SELECT * FROM user WHERE user_id = ?`, req.params.user_id, (err,rows) => {
+        if (err) res.status(500).send(err);
+        else {
+            if (!rows) res.status(404).send('user not found');
+            else res.json(rows);
+        }
+    });
+});
+
+app.post('/user', (req,res) => {
+    const user = req.body;
+    db.run(`INSERT INTO user (username,password,email,age) VALUES (?,?,?,?)`, user.username, user.password, user.email, user.age, function(err) {
+        if (err) res.status(500).send(err);
+        else {
+            user.id = this.lastID;
+            res.send(user);
+        }
+    });
+});
+
+app.put('/user/:user_id', (req,res) => {
+    const user = req.body;
+    db.run(`UPDATE user SET username = ?, password = ? , email = ?, age = ? , role = ? WHERE user_id = ?`, user.username, user.password, user.email, user.age, user.role, req.params.user_id, function(err) {
+        if (err) res.status(500).send(err);
+        else res.send(user);
+    });
+});
+
+app.delete('/user/:user_id', (req,res) => {
+    db.run(`DELETE FROM user WHERE user_id = ?`, req.params.user_id, function(err) {
+        if (err) res.status(500).send(err);
+        else res.send({});
+    });
+});
 
 // music db
-
 app.get('/music', (req,res) => {
     db.all(`SELECT * FROM music`, (err,rows) => {
         if (err) res.status(500).send(err);
@@ -65,7 +105,7 @@ app.get('/music/:id', (req,res) => {
 
 app.post('/music', (req,res) => {
     const music = req.body;
-    db.run(`INSERT INTO music (title,singer,genre,release_date) VALUES (?,?,?,?)`, music.title, music.singer,music.genre,music.release_date, function(err) {
+    db.run(`INSERT INTO music (title,singer,genre,musicImg,release_date) VALUES (?,?,?,?,?)`, music.title, music.singer,music.genre,music.musicImg,music.release_date, function(err) {
         if (err) res.status(500).send(err);
         else {
             music.id = this.lastID;
@@ -76,7 +116,7 @@ app.post('/music', (req,res) => {
 
 app.put('/music/:id', (req,res) => {
     const music = req.body;
-    db.run(`UPDATE music SET title = ?, singer = ? , genre = ? , release_date = ? WHERE id = ?`, music.title, music.singer,music.genre,music.release_date, req.params.id,function(err) {
+    db.run(`UPDATE music SET title = ?, singer = ? , genre = ?, musicImg = ? , release_date = ? WHERE id = ?`, music.title, music.singer,music.genre,music.musicImg,music.release_date, req.params.id,function(err) {
         if (err) res.status(500).send(err);
         else res.send(music);
     });
@@ -90,9 +130,7 @@ app.delete('/music/:id', (req,res) => {
 });
 
 
-
-// playlist db ยังไม่เสร็จเหลือเชื่อมdb
-
+// playlist db 
 app.get('/playlist', (req,res) => {
     db.all(`SELECT * FROM playlist`, (err,rows) => {
         if (err) res.status(500).send(err);
@@ -112,9 +150,7 @@ app.get('/playlist/:playlist_id', (req,res) => {
 
 app.post('/playlist', (req,res) => {
     const playlist = req.body;
-    const music = req.body.music; // Assuming you have a 'music' property in your request body
-    const user = req.body.user; // Assuming you have a 'user' property in your request body
-    db.run(`INSERT INTO playlist (playlistname, music_id, title, singer, user_id) VALUES (?, ?, ?, ?, ?)`,playlist.playlistname, music.music_id, music.title,music.singer, user.user_id, function(err) {
+    db.run(`INSERT INTO playlist (playlistname, music_id, title, singer, user_id) VALUES (?, ?, ?, ?, ?)`,playlist.playlistname, playlist.music_id, playlist.title, playlist.singer, playlist.user_id, function(err) {
     if (err) res.status(500).send(err);
     else {
         playlist.playlist_id = this.lastID;
@@ -123,15 +159,14 @@ app.post('/playlist', (req,res) => {
     });
 });
 
-/* app.put('/playlist/:playlist_id', (req, res) => {
+ app.put('/playlist/:playlist_id', (req, res) => {
     const playlist = req.body;
     db.run(`UPDATE playlist SET playlistname = ?, music_id = ?, title = ?, singer = ?, user_id = ? WHERE playlist_id = ?`,playlist.playlistname,playlist.music_id,playlist.title,playlist.singer,playlist.user_id,req.params.playlist_id,function (err) {
             if (err) res.status(500).send(err);
             else res.send(playlist);
         }
     );
-}); */
-
+}); 
 
 app.delete('/playlist/:playlist_id', (req,res) => {
     db.run(`DELETE FROM playlist WHERE playlist_id = ?`, req.params.playlist_id, function(err) {
@@ -140,10 +175,8 @@ app.delete('/playlist/:playlist_id', (req,res) => {
     });
 });
 
-/*
 
 // review db
-
 app.get('/review', (req,res) => {
     db.all(`SELECT * FROM review`, (err,rows) => {
         if (err) res.status(500).send(err);
@@ -174,7 +207,7 @@ app.post('/review', (req,res) => {
 
 app.put('/review/:review_id', (req,res) => {
     const review = req.body;
-    db.run(`UPDATE review SET reviewname = ? , password = ? , name = ? , age = ? , phone_number = ? WHERE review_id = ?`, review.reviewname,review.password,review.name,review.age,review.phone_number, req.params.review_id,function(err) {
+    db.run(`UPDATE review SET reviewname = ? , password = ? , name = ? , age = ? , role = ? WHERE review_id = ?`, review.reviewname,review.password,review.name,review.age,review.role, req.params.review_id,function(err) {
         if (err) res.status(500).send(err);
         else res.send(review);
     });
@@ -185,7 +218,7 @@ app.delete('/review/:review_id', (req,res) => {
         if (err) res.status(500).send(err);
         else res.send({});
     });
-}); */
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on port http://localhost:${port}...`));
