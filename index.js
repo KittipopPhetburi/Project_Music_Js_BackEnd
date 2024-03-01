@@ -236,7 +236,7 @@ app.get("/getallcomment",(req,res) => {
     db.run(`SELECT user.*, music.*, review.*
     FROM user
     JOIN review ON user.user_id = review.user_id
-    JOIN review ON review.music_id = music.music_id`,(err,rows) => {
+    JOIN music ON review.music_id = music.id`,(err,rows) => {
         if (err) {
             console.log("tt")
             res.status(500).send(err);
