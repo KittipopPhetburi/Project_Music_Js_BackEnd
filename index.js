@@ -220,5 +220,33 @@ app.delete('/review/:review_id', (req,res) => {
     });
 });
 
+app.post("/createreview",(req,res) => {
+    console.log(req.body);
+    db.run(`INSERT INTO review (music_id,user_id,score,comment) VALUES (?,?,?,?)`,req.body.music_id,req.body.user_id,req.body.score,req.body.comment,(err) => {
+        if (err) {
+            res.status(500).send(err);
+        }
+        else{
+            res.json({});
+        }
+    }); 
+});
+
+app.get("/getallcomment",(req,res) => {
+    db.run(`SELECT user.*, music.*, review.*
+    FROM user
+    JOIN review ON user.user_id = review.user_id
+    JOIN review ON review.music_id = music.music_id`,(err,rows) => {
+        if (err) {
+            console.log("tt")
+            res.status(500).send(err);
+        }
+        else{
+            console.log("t")
+            res.json(rows);
+        }
+    });
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on port http://localhost:${port}...`));
