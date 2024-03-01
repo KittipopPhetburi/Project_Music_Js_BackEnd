@@ -236,13 +236,13 @@ app.get("/getallcomment",(req,res) => {
     db.run(`SELECT user.*, music.*, review.*
     FROM user
     JOIN review ON user.user_id = review.user_id
-    JOIN music ON review.music_id = music.id`,(err,rows) => {
+    JOIN review ON music.id = review.music_id`,(err,rows) => {
         if (err) {
-            console.log("tt")
             res.status(500).send(err);
         }
         else{
             console.log("t")
+            console.log(rows)
             res.json(rows);
         }
     });
