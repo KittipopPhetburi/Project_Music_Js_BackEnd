@@ -138,11 +138,24 @@ app.get('/playlist', (req,res) => {
     });
 });
 
-app.get('/playlist/:playlist_id', (req,res) => {
-    db.get(`SELECT * FROM playlist WHERE playlist_id = ?`, req.params.playlist_id, (err,rows) => {
-        if (err) res.status(500).send(err);
+app.get('/playlist/:playlist_id', (req, res) => {
+    db.get(`SELECT * FROM playlist WHERE playlist_id = ?`, req.params.playlist_id, (err, row) => {
+        if (err)  res.status(500).send(err);
         else {
-            if (!rows) res.status(404).send('playlist not found');
+            if (!row)res.status(404).send('Playlist not found');
+            else res.json(row);
+        }
+    });
+});
+
+app.get('/musicplaylist/:playlist_id', (req, res) => {
+    db.all(`SELECT music.*, playlist.*
+    FROM playlist 
+    JOIN music ON playlist.music_id = music.id
+    WHERE playlist_id = ?`, req.params.playlist_id, (err, rows) => {
+        if (err)  res.status(500).send(err);
+        else {
+            if (!rows || rows.length === 0) res.status(404).send('Playlist not found');
             else res.json(rows);
         }
     });
@@ -232,21 +245,20 @@ app.post("/createreview",(req,res) => {
     }); 
 });
 
-app.get("/getallcomment",(req,res) => {
-    db.run(`SELECT user.*, music.*, review.*
-    FROM user
-    JOIN review ON user.user_id = review.user_id
-    JOIN review ON music.id = review.music_id`,(err,rows) => {
+app.get("/getcomment/:id", (req, res) => {
+    db.all(`SELECT user.*, music.*, review.*
+    FROM music
+    JOIN review ON music.id = review.music_id
+    JOIN user ON user.user_id = review.user_id
+    WHERE music.id = ?`, req.params.id, (err, rows) => {
         if (err) {
             res.status(500).send(err);
-        }
-        else{
-            console.log("t")
-            console.log(rows)
+        } else {
             res.json(rows);
         }
     });
 });
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on port http://localhost:${port}...`));
